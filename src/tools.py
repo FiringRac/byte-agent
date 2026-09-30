@@ -8,3 +8,6 @@ def inspect_data(df):
         "datatypes" : df.dtypes.astype(str).to_dict(),
         "null values" : df.isna().sum().to_dict()
     }
+    
+def filter_data(df, column, value):
+    return(df[df[column] == value])
