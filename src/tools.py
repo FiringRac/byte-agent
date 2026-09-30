@@ -1,6 +1,6 @@
 import pandas as pd
 import numpy as np
-
+import matplotlib.pyplot as plt
 def inspect_data(df):
     #return dataset metadata to LLM
     return {
@@ -48,3 +48,14 @@ def clean_data(df):
                 df[x] = df[x].fillna(df[x].mode()[0])
                 
     return df
+
+def plot_data(df, x, y, kind="bar"):
+    #create a plot from two columns in the dataset and save it as an image
+    ax = df.plot(x=x, y=y, kind=kind)
+    
+    fig = ax.get_figure()
+    fig.tight_layout()
+    fig.savefig("plot.png")
+    plt.close(fig)
+    
+    return "plot.png"
