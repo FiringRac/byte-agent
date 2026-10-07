@@ -48,28 +48,32 @@ def create_tools(df):
         
         return result.to_dict()
     
-    return [inspect_data, filter_data, compare_data,]
-
-def clean_data(df):
-    """replaces missing numerical values with the median of the column, and missing text values with the most common value"""
-    df = df.copy() #so we don't silently mess with the original data
     
-    for x in df.columns:
-        if df[x].isna().any():
-            if df[x].dtype.kind in "biufc":
-                df[x] = df[x].fillna(df[x].median())
-            else:
-                df[x] = df[x].fillna(df[x].mode()[0])
+
+    @tool
+    def clean_data():
+        """replaces missing numerical values with the median of the column, and missing text values with the most common value"""
+        dfcopy = df.copy() #so we don't silently mess with the original data
+    
+        for x in dfcopy.columns:
+            if dfcopy[x].isna().any():
+                if dfcopy[x].dtype.kind in "biufc":
+                    dfcopy[x] = dfcopy[x].fillna(dfcopy[x].median())
+                else:
+                    dfcopy[x] = dfcopy[x].fillna(dfcopy[x].mode()[0])
                 
-    return df
+        return dfcopy
 
-def plot_data(df, x, y, kind="bar"):
-    """create a plot from two columns in the dataset and save it as an image."""
-    ax = df.plot(x=x, y=y, kind=kind)
+    @tool
+    def plot_data(x : str, y : str, kind : str ="bar"):
+        """create a plot from two columns in the dataset and save it as an image."""
+        ax = df.plot(x=x, y=y, kind=kind)
+
+        fig = ax.get_figure()
+        fig.tight_layout()
+        fig.savefig("plot.png")
+        plt.close(fig)
     
-    fig = ax.get_figure()
-    fig.tight_layout()
-    fig.savefig("plot.png")
-    plt.close(fig)
+        return "plot.png"
     
-    return "plot.png"
+    return [inspect_data, filter_data, compare_data, clean_data, plot_data, ]

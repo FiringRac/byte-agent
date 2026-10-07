@@ -18,3 +18,9 @@ print(tools[1].invoke({"column" : "City", "value" : "Delhi"}))
 
 print("\n --- COMPARE ---")
 print(tools[2].invoke({"group_by" : "City", "column" : "Salary", "operation" : "max"}))
+
+print("\n --- CLEAN ---")
+print(tools[3].invoke({}))
+
+print("\n --- PLOT ---")
+print(tools[4].invoke({"x" : "City", "y" : "Salary", "kind" : "bar"}))
