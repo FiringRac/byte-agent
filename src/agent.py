@@ -3,6 +3,8 @@ from tools import create_tools
 from langchain_google_genai import ChatGoogleGenerativeAI
 import json
 from langchain_core.messages import HumanMessage, ToolMessage, SystemMessage
+import numpy as np
+import math
 
 df = pd.read_csv("data/employee.csv")
 tools = create_tools(df)
@@ -13,6 +15,31 @@ model = ChatGoogleGenerativeAI(
 )
 
 model_with_tools = model.bind_tools(tools)
+
+def make_json_safe(value):
+    """Convert tool results into values that JSON can represent."""
+    if isinstance(value, pd.DataFrame):
+        return make_json_safe(value.to_dict(orient="records"))
+
+    if isinstance(value, pd.Series):
+        return make_json_safe(value.to_dict())
+
+    if isinstance(value, dict):
+        return {
+            str(k): make_json_safe(v)
+            for k, v in value.items()
+        }
+
+    if isinstance(value, (list, tuple)):
+        return [make_json_safe(v) for v in value]
+
+    if isinstance(value, np.generic):
+        value = value.item()
+
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+
+    return value
 
 def run_agent(question, max_iterations= 8):
     """Answer a question by repeatedly calling analysis tools when required."""
@@ -63,7 +90,7 @@ def run_agent(question, max_iterations= 8):
                     
             messages.append(
                 ToolMessage(
-                    content = json.dumps(result, default=str),
+                    content=json.dumps(make_json_safe(result), allow_nan=False),
                     tool_call_id = tool_call["id"],
                 )
             )
