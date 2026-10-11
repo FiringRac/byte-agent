@@ -15,17 +15,30 @@ def create_tools(df):
             "datatypes" : df.dtypes.astype(str).to_dict(),
             "null values" : df.isna().sum().to_dict()
         }
-    
-
+        
     @tool
     def filter_data(column: str, value: str):
-        """"find rows where the value in the specified column is equal to the value needed"""
+        """find rows where the specified column equals the requested value."""
+        if column not in df.columns:
+            raise ValueError(f"Unknown column: {column}")
+
         result = df[df[column].astype(str) == value]
-        return result.to_dict(orient = "records")
+        return result.to_dict(orient="records")
+
 
     @tool
     def compare_data(operation, group_by, column):
         """perform an aggregate function on one column grouped by another.""" 
+        
+        if group_by not in df.columns:
+            raise ValueError(f"Unknown grouping column : {group_by}")
+        
+        if operation not in {"sum", "count", "min", "max", "mean"}:
+            raise ValueError(f"Unsupported operation : {operation}")
+        
+        if column not in df.columns:
+            raise ValueError(f"Unknown column : {column}")
+        
         group = df.groupby(group_by)[column]
     
         if operation == "sum":
@@ -58,10 +71,14 @@ def create_tools(df):
         for x in dfcopy.columns:
             if dfcopy[x].isna().any():
                 if dfcopy[x].dtype.kind in "biufc":
-                    dfcopy[x] = dfcopy[x].fillna(dfcopy[x].median())
-                else:
-                    dfcopy[x] = dfcopy[x].fillna(dfcopy[x].mode()[0])
-                
+                    median = dfcopy[x].median()
+                    if pd.notna(median):
+                        dfcopy[x] = dfcopy[x].fillna(median)
+            else:
+                modes = dfcopy[x].mode()
+                if not modes.empty:
+                    dfcopy[x] = dfcopy[x].fillna(modes[0])
+                    
         return dfcopy
 
     @tool
